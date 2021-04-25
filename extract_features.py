@@ -45,7 +45,7 @@ def time_delta(t1:datetime, t2:datetime):
 
     return (delta.days * seconds_in_a_day + delta.seconds) / 60
 
-def delay(sessions, lesson_starts_at:datetime):
+def arrival_delay(sessions, lesson_starts_at:datetime):
     '''
     Positivo se o aluno acessou a aula antes do início
     '''
@@ -66,7 +66,7 @@ def attendance(sessions, lesson_duration):
     '''
     attendance = # sessões x duração média das sessões
     '''
-    return min(1, np.sum([duration for (_, _, duration) in sessions]) / lesson_duration)
+    return np.clip(np.sum([duration for (_, _, duration) in sessions]) / lesson_duration, 0, 1)
 
 def session_duration_histogram(class_sessions, lesson, density=True):
     '''
@@ -82,7 +82,7 @@ def session_duration_histogram(class_sessions, lesson, density=True):
 
 def presence(sessions, lesson):
     condicaoA = attendance(student_sessions, lesson.duration) > 0.7
-    condicaoB = delay(student_sessions, lesson.start) > -15 # minutos
+    condicaoB = arrival_delay(student_sessions, lesson.start) > -15 # minutos
     condicaoC = early_departure(student_sessions, lesson.end) > -15 # minutos
 
     return condicaoA and condicaoB and condicaoC
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     lesson = Lesson(datetime(2020,12,2,19), timedelta(hours=2, minutes=15))
 
     for (student_name, student_sessions) in class_sessions.items():
-        student_delay = delay(student_sessions, lesson.start)
+        student_delay = arrival_delay(student_sessions, lesson.start)
         student_early_departure = early_departure(student_sessions, lesson.end)
 
         print('--------------')
